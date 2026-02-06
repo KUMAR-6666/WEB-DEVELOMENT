@@ -1,9 +1,7 @@
 import unittest
 import json
-from app import create_app, db
-from app.models.user import User
-from app.models.coin import Coin
-from config import Config
+from app import create_app, Config
+from models import db, User, Coin
 
 class TestConfig(Config):
     TESTING = True
