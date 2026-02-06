@@ -1,6 +1,5 @@
-from app import create_app, db
-from app.models.coin import Coin
-from app.models.user import User
+from app import create_app
+from models import db, Coin, User
 
 app = create_app()
 
