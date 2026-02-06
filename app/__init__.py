@@ -3,11 +3,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flasgger import Swagger
 from config import Config
 
 db = SQLAlchemy()
 jwt = JWTManager()
 migrate = Migrate()
+swagger = Swagger()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -17,6 +19,7 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     migrate.init_app(app, db)
     CORS(app)
+    swagger.init_app(app)
 
     from app.routes.auth import auth_bp
     from app.routes.market import market_bp

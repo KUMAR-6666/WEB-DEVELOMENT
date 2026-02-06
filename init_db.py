@@ -1,9 +1,11 @@
 from app import create_app, db
 from app.models.coin import Coin
+from app.models.user import User
+import os
 
 app = create_app()
 
-def seed_coins():
+def seed_db():
     coins_data = [
         {'name': 'Bitcoin', 'symbol': 'BTC', 'price': 60000.0, 'impact': 10000000.0},
         {'name': 'Ethereum', 'symbol': 'ETH', 'price': 3000.0, 'impact': 5000000.0},
@@ -18,20 +20,33 @@ def seed_coins():
     ]
 
     with app.app_context():
+        # Clean up for fresh start in this phase
+        db.drop_all()
         db.create_all()
+
+        # Seed Coins
         for data in coins_data:
-            coin = Coin.query.filter_by(symbol=data['symbol']).first()
-            if not coin:
-                new_coin = Coin(
-                    name=data['name'],
-                    symbol=data['symbol'],
-                    current_price=data['price'],
-                    base_price=data['price'],
-                    volume_impact=data['impact']
-                )
-                db.session.add(new_coin)
+            new_coin = Coin(
+                name=data['name'],
+                symbol=data['symbol'],
+                current_price=data['price'],
+                base_price=data['price'],
+                volume_impact=data['impact']
+            )
+            db.session.add(new_coin)
+
+        # Seed Market Wallet
+        market_wallet = User(
+            username='Market_Wallet',
+            email='market@exchange.com',
+            is_market_wallet=True,
+            balance=0.0
+        )
+        market_wallet.set_password('market-secret-pass-2024')
+        db.session.add(market_wallet)
+
         db.session.commit()
-        print("Database initialized and coins seeded!")
+        print("Database initialized, coins seeded, and Market Wallet created!")
 
 if __name__ == '__main__':
-    seed_coins()
+    seed_db()

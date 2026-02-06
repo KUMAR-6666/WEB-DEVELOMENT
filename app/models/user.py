@@ -5,11 +5,14 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
     email = db.Column(db.String(120), index=True, unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256)) # Increased length
     balance = db.Column(db.Float, default=0.0)
+    locked_balance = db.Column(db.Float, default=0.0) # Funds in pending buy orders
+    is_market_wallet = db.Column(db.Boolean, default=False)
 
     portfolios = db.relationship('Portfolio', backref='owner', lazy='dynamic')
     transactions = db.relationship('Transaction', backref='user', lazy='dynamic')
+    limit_orders = db.relationship('LimitOrder', backref='user', lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -22,5 +25,7 @@ class User(db.Model):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'balance': self.balance
+            'balance': self.balance,
+            'locked_balance': self.locked_balance,
+            'is_market_wallet': self.is_market_wallet
         }

@@ -1,29 +1,30 @@
-# Crypto Market Simulation Backend
+# Crypto Market Simulation Backend - Phase 2
 
-Backend API untuk market kripto simulasi menggunakan Flask.
+Backend API canggih untuk market kripto simulasi menggunakan Flask.
 
-## Fitur
+## Fitur Baru (Phase 2)
+1. **Riwayat Harga (Price History)**: Grafik harga koin kini bisa didukung dengan data history.
+2. **Leaderboard**: Lihat peringkat kekayaan pengguna (Saldo + Aset).
+3. **Limit Order**: Pasang beli/jual di harga target. Aset akan dikunci (locked) saat pesanan dipasang.
+4. **Trading Fees & Market Wallet**: Fee 0.1% tiap transaksi yang dikumpulkan ke dompet pengelola (Market Wallet).
+5. **Volatilitas Otomatis**: Harga berubah secara dinamis berdasarkan waktu (Random Walk) dan aktivitas pasar.
+6. **Dokumentasi Swagger**: API terdokumentasi lengkap di `/apidocs/`.
+
+## Fitur Utama
 - **Autentikasi JWT**: Registrasi dan Login pengguna.
-- **Simulasi Pasar**: Daftar 10 koin teratas dengan harga yang berubah berdasarkan permintaan pasar (beli/jual).
-- **Trading**: Beli dan jual koin menggunakan saldo virtual.
+- **Trading**: Beli dan jual koin secara instan (Market Order) atau terjadwal (Limit Order).
 - **Portfolio**: Pantau saldo koin dan nilai aset saat ini.
 - **Deposit**: Tambah saldo virtual untuk pengujian.
-
-## Teknologi
-- Flask
-- Flask-SQLAlchemy (SQLite)
-- Flask-JWT-Extended
-- Flask-CORS
 
 ## Struktur Proyek
 ```
 app/
-  models/      # Database models
-  routes/      # API endpoints (Blueprints)
-  services/    # Business logic (Price simulation)
+  models/      # Database models (User, Coin, Portfolio, Transaction, PriceHistory, LimitOrder)
+  routes/      # API endpoints (auth, market, trade, user)
+  services/    # Business logic (price_service, trade_service)
 config.py      # Konfigurasi aplikasi
 run.py         # Entry point aplikasi
-init_db.py     # Skrip inisialisasi database & koin
+init_db.py     # Skrip inisialisasi database
 ```
 
 ## Cara Menjalankan Secara Lokal
@@ -39,53 +40,14 @@ init_db.py     # Skrip inisialisasi database & koin
    ```bash
    python run.py
    ```
+4. Buka Dokumentasi API:
+   `http://localhost:5000/apidocs/`
 
 ## Panduan Deployment di PythonAnywhere
-
-1. **Upload Kode**:
-   - Zip folder proyek Anda atau gunakan Git untuk clone ke PythonAnywhere.
-   - Buka bash console di PythonAnywhere.
-
-2. **Setup Virtual Environment**:
-   ```bash
-   mkvirtualenv --python=/usr/bin/python3.10 my-venv
-   pip install -r requirements.txt
-   ```
-
-3. **Inisialisasi Database**:
-   ```bash
-   python init_db.py
-   ```
-
-4. **Konfigurasi Web Tab**:
-   - Pergi ke tab **Web** di dashboard PythonAnywhere.
-   - Klik **Add a new web app**.
-   - Pilih **Manual Configuration** -> **Python 3.10**.
-   - Atur **Virtualenv** path ke: `/home/USERNAME/.virtualenvs/my-venv`.
-   - Atur **Source code** path ke: `/home/USERNAME/your-project-folder`.
-
-5. **Edit WSGI File**:
-   Klik pada link "WSGI configuration file" dan ubah isinya menjadi:
-   ```python
-   import sys
-   import os
-
-   path = '/home/USERNAME/your-project-folder'
-   if path not in sys.path:
-       sys.path.append(path)
-
-   from run import app as application
-   ```
-   *(Ganti USERNAME dan your-project-folder sesuai dengan akun Anda)*
-
-6. **Reload Web App**:
-   Klik tombol **Reload** di tab Web.
+(Sama seperti sebelumnya, pastikan menjalankan `python init_db.py` untuk skema database baru).
 
 ## Endpoint API Utama
-- `POST /api/auth/register`: Username, Email, Password
-- `POST /api/auth/login`: Username, Password
-- `GET /api/market/`: List semua koin
-- `POST /api/user/deposit`: Amount (Butuh JWT)
-- `POST /api/trade/buy`: Symbol, Amount (Butuh JWT)
-- `POST /api/trade/sell`: Symbol, Amount (Butuh JWT)
-- `GET /api/user/portfolio`: Cek aset (Butuh JWT)
+- `GET /apidocs/`: Dokumentasi Lengkap
+- `GET /api/user/leaderboard`: Peringkat kekayaan
+- `GET /api/market/<symbol>/history`: Data grafik harga
+- `POST /api/trade/limit-order`: Memasang Limit Order
