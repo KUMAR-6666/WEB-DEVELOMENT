@@ -32,8 +32,7 @@ def buy_coin():
             symbol: {type: string}
             amount: {type: number}
     responses:
-      200:
-        description: Buy successful
+      200: {description: Buy successful}
     """
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -84,8 +83,7 @@ def sell_coin():
             symbol: {type: string}
             amount: {type: number}
     responses:
-      200:
-        description: Sell successful
+      200: {description: Sell successful}
     """
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -133,8 +131,7 @@ def create_limit_order():
             target_price: {type: number}
             type: {type: string, enum: [buy, sell]}
     responses:
-      201:
-        description: Limit order created
+      201: {description: Limit order created}
     """
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -166,6 +163,40 @@ def create_limit_order():
         db.session.rollback()
         return jsonify({'message': 'Failed to create limit order', 'error': str(e)}), 500
 
+@trade_bp.route('/limit-order/<int:order_id>/cancel', methods=['POST'])
+@jwt_required()
+def cancel_limit_order(order_id):
+    """
+    Cancel Limit Order
+    ---
+    security:
+      - Bearer: []
+    responses:
+      200: {description: Order cancelled}
+    """
+    user_id = int(get_jwt_identity())
+    order = db.session.get(LimitOrder, order_id)
+    if not order or order.user_id != user_id:
+        return jsonify({'message': 'Order not found'}), 404
+    if order.status != 'pending':
+        return jsonify({'message': f'Cannot cancel order with status {order.status}'}), 400
+    user = db.session.get(User, user_id)
+    try:
+        if order.type == 'buy':
+            locked_total = (order.target_price * order.amount) * (1 + TRADING_FEE_RATE)
+            user.locked_balance -= locked_total
+            user.balance += locked_total
+        else:
+            portfolio = Portfolio.query.filter_by(user_id=user.id, coin_id=order.coin_id).first()
+            portfolio.locked_amount -= order.amount
+            portfolio.amount += order.amount
+        order.status = 'cancelled'
+        db.session.commit()
+        return jsonify({'message': 'Order cancelled successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to cancel order', 'error': str(e)}), 500
+
 @trade_bp.route('/limit-orders', methods=['GET'])
 @jwt_required()
 def get_limit_orders():
@@ -175,8 +206,7 @@ def get_limit_orders():
     security:
       - Bearer: []
     responses:
-      200:
-        description: List of user limit orders
+      200: {description: List of user limit orders}
     """
     user_id = int(get_jwt_identity())
     orders = LimitOrder.query.filter_by(user_id=user_id).all()

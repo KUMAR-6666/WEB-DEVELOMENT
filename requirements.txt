@@ -7,3 +7,4 @@ python-dotenv==1.0.1
 PyJWT==2.8.0
 werkzeug==3.0.3
 flasgger==0.9.7.1
+email-validator==2.1.1

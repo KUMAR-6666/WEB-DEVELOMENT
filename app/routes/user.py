@@ -11,15 +11,7 @@ user_bp = Blueprint('user', __name__)
 @user_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
-    """
-    Get User Profile
-    ---
-    security:
-      - Bearer: []
-    responses:
-      200:
-        description: User profile data
-    """
+    """Get User Profile"""
     user_id = int(get_jwt_identity())
     user = db.session.get(User, user_id)
     return jsonify(user.to_dict()), 200
@@ -27,15 +19,7 @@ def get_profile():
 @user_bp.route('/portfolio', methods=['GET'])
 @jwt_required()
 def get_portfolio():
-    """
-    Get User Portfolio
-    ---
-    security:
-      - Bearer: []
-    responses:
-      200:
-        description: List of owned coins
-    """
+    """Get User Portfolio"""
     user_id = int(get_jwt_identity())
     portfolios = Portfolio.query.filter_by(user_id=user_id).all()
     return jsonify([p.to_dict() for p in portfolios if (p.amount + p.locked_amount) > 0]), 200
@@ -43,22 +27,7 @@ def get_portfolio():
 @user_bp.route('/deposit', methods=['POST'])
 @jwt_required()
 def deposit():
-    """
-    Deposit Virtual Cash
-    ---
-    security:
-      - Bearer: []
-    parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          properties:
-            amount: {type: number}
-    responses:
-      200:
-        description: Deposit successful
-    """
+    """Deposit Virtual Cash"""
     user_id = int(get_jwt_identity())
     data = request.get_json()
     amount = data.get('amount')
@@ -71,15 +40,40 @@ def deposit():
     db.session.commit()
     return jsonify({'message': f'Successfully deposited ${amount}', 'new_balance': user.balance}), 200
 
+@user_bp.route('/transactions', methods=['GET'])
+@jwt_required()
+def get_transactions():
+    """
+    Get Transaction History (Paginated)
+    ---
+    parameters:
+      - name: page
+        in: query
+        type: integer
+        default: 1
+      - name: per_page
+        in: query
+        type: integer
+        default: 10
+    """
+    user_id = int(get_jwt_identity())
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    pagination = Transaction.query.filter_by(user_id=user_id)\
+        .order_by(Transaction.timestamp.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+
+    return jsonify({
+        'transactions': [t.to_dict() for t in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': pagination.page
+    }), 200
+
 @user_bp.route('/leaderboard', methods=['GET'])
 def get_leaderboard():
-    """
-    Get Market Leaderboard
-    ---
-    responses:
-      200:
-        description: List of users ranked by wealth
-    """
+    """Get Market Leaderboard"""
     users = User.query.all()
     leaderboard = []
     for user in users:
